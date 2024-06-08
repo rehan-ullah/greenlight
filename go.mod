@@ -1,3 +1,5 @@
-module greenlight.alexedwards.net
+module greenlight
 
-go 1.21.0
+go 1.22.0
+
+require github.com/julienschmidt/httprouter v1.3.0

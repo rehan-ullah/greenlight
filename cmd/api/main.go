@@ -20,8 +20,8 @@ const version = "1.0.0"
 // application (development, staging, production, etc.). We will read in these
 // configuration settings from command-line flags when the application starts.
 type config struct {
-	port int
-	env  string
+	portt int
+	env   string
 }
 
 // Define an application struct to hold the dependencies for our HTTP handlers, helpers,
@@ -39,7 +39,7 @@ func main() {
 	// Read the value of the port and env command-line flags into the config struct. We
 	// default to using the port number 4000 and the environment "development" if no
 	// corresponding flags are provided.
-	flag.IntVar(&cfg.port, "port", 4000, "API server port")
+	flag.IntVar(&cfg.portt, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 	flag.Parse()
 
@@ -54,22 +54,14 @@ func main() {
 		logger: logger,
 	}
 
-	// Declare a new servemux and add a /v1/healthcheck route which dispatches requests
-	// to the healthcheckHandler method (which we will create in a moment).
-	mux := http.NewServeMux()
-	mux.HandleFunc("/v1/healthcheck", app.healthcheckHandler)
-
-	// Declare a HTTP server with some sensible timeout settings, which listens on the
-	// port provided in the config struct and uses the servemux we created above as the
-	// handler.
+	// Use the httprouter instance returned by app.routes() as the server handler.
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      mux,
+		Addr:         fmt.Sprintf(":%d", cfg.portt),
+		Handler:      app.routes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
-	// Start the HTTP server.
 	logger.Printf("starting %s server on %s", cfg.env, srv.Addr)
 	err := srv.ListenAndServe()
 	logger.Fatal(err)
