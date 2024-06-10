@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"net/http"
 )
 
@@ -24,11 +23,11 @@ func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Reques
 
 	// ? another approach | marshaling go struct or map or slice
 
-	data := map[string]string{
-		"status":      "available",
-		"environment": app.config.env,
-		"version":     version,
-	}
+	// data := map[string]string{
+	// 	"status":      "available",
+	// 	"environment": app.config.env,
+	// 	"version":     version,
+	// }
 
 	// js, err := json.Marshal(data)
 	// if err != nil {
@@ -41,7 +40,7 @@ func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Reques
 	// js = append(js, '\n')
 	// // At this point we know that encoding the data worked without any problems, so we
 	// // can safely set any necessary HTTP headers for a successful response.
-	// w.Header().Set("Content-Type", "application/json")
+	// ? w.Header().Set("Content-Type", "application/json")
 	// // Use w.Write() to send the []byte slice containing the JSON as the response body.
 	// w.Write(js)
 
@@ -55,7 +54,7 @@ func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Reques
 	// ? json.Encoder
 
 	// Set the "Content-Type: application/json" header on the response.
-	w.Header().Set("Content-Type", "application/json")
+	//? w.Header().Set("Content-Type", "application/json")
 	// Use the json.NewEncoder() function to initialize a json.Encoder instance that
 	// writes to the http.ResponseWriter. Then we call its Encode() method, passing in
 	// the data that we want to encode to JSON (which in this case is the map above). If
@@ -73,10 +72,34 @@ func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Reques
 	// header and copying the JSON from the bytes.Buffer to http.ResponseWriter. But once
 	// you start doing that, it’s simpler and cleaner (as well as slightly faster) to use the alternative
 	// json.Marshal() approach instead.
-	err := json.NewEncoder(w).Encode(data)
+	// ?
+	// err := json.NewEncoder(w).Encode(data)
+	// if err != nil {
+	// 	app.logger.Print(err)
+	// 	http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
+	// }
+
+	// ? this method is slow
+	// Declare an envelope map containing the data for the response. Notice that the way
+	// we've constructed this means the environment and version data will now be nested
+	// under a system_info key in the JSON response.
+
+	env := envelope{
+		"status": "available",
+		"system_info": map[string]string{
+			"environment": app.config.env,
+			"version":     version,
+		},
+	}
+
+	err := app.writeJSON(w, http.StatusOK, env, nil)
 	if err != nil {
-		app.logger.Print(err)
-		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
+		// app.logger.Print(err)
+		// http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
+
+		//	 Use the new serverErrorResponse() helper.
+		app.serverErrorResponse(w, r, err)
+
 	}
 
 }
